@@ -50,7 +50,7 @@ Grok Search MCP 是一个基于 [FastMCP](https://github.com/jlowin/fastmcp) 构
 - ✅ **工具路由控制（一键禁用官方 WebSearch/WebFetch，强制使用 GrokSearch）**
 - ✅ **自动时间注入（搜索时自动获取本地时间，确保时间相关查询的准确性）**
 - ✅ **多平台支持（自动检测 xAI 官方 / OpenRouter / 通用 OpenAI 兼容平台）**
-- ✅ **`GROK_MODEL` 环境变量支持（可配置 `:online` 后缀启用 OpenRouter 原生搜索）**
+- ✅ **OpenRouter 自动补全 `:online` 后缀，无需手动配置**
 - ✅ 可扩展架构，支持添加其他搜索 Provider
 </details>
 
@@ -94,7 +94,7 @@ wget -qO- https://astral.sh/uv/install.sh | sh
 ### Step 1. 安装 Grok Search MCP 
 
 使用 `claude mcp add-json` 一键安装并配置：
-**注意：** 需要替换 **GROK_API_URL**、**GROK_API_KEY** 以及可选的 **GROK_MODEL** 字段。支持 xAI 官方 API、OpenRouter 以及其他 OpenAI 兼容平台。
+**注意：** 需要替换 **GROK_API_URL**、**GROK_API_KEY** 以及可选的 **GROK_MODEL** 字段。支持 xAI 官方 API、OpenRouter 以及其他 OpenAI 兼容平台。OpenRouter 用户无需手动添加 `:online` 后缀，系统会自动补全。
 
 ```bash
 claude mcp add-json grok-search --scope user '{
@@ -108,7 +108,7 @@ claude mcp add-json grok-search --scope user '{
   "env": {
     "GROK_API_URL": "https://openrouter.ai/api/v1",
     "GROK_API_KEY": "your-api-key-here",
-    "GROK_MODEL": "x-ai/grok-4-fast:online"
+    "GROK_MODEL": "x-ai/grok-4-fast"
   }
 }'
 ```
@@ -152,13 +152,13 @@ Grok Search MCP 支持多种 API 平台，根据 `GROK_API_URL` 自动检测：
 
 | 平台 | URL 特征 | 搜索能力 | 配置示例 |
 |------|---------|---------|---------|
-| **OpenRouter** | `openrouter.ai` | ✅ 原生实时搜索（需 `:online` 后缀） | `GROK_MODEL=x-ai/grok-4-fast:online` |
+| **OpenRouter** | `openrouter.ai` | ✅ 原生实时搜索（自动补全 `:online`） | `GROK_MODEL=x-ai/grok-4-fast` |
 | **xAI 官方** | `api.x.ai` | ✅ 原生实时搜索（规划中） | `GROK_MODEL=grok-4-fast` |
 | **通用平台** | 其他 URL | ⚠️ 基于 Prompt 的搜索 | `GROK_MODEL=grok-4-fast` |
 
 #### OpenRouter 用户（推荐）
 
-使用 OpenRouter 时，在模型名后添加 `:online` 后缀即可启用**原生实时网络搜索**：
+使用 OpenRouter 时，系统会**自动为模型名添加 `:online` 后缀**以启用原生实时网络搜索，无需手动配置：
 
 ```bash
 claude mcp add-json grok-search --scope user '{
@@ -172,12 +172,12 @@ claude mcp add-json grok-search --scope user '{
   "env": {
     "GROK_API_URL": "https://openrouter.ai/api/v1",
     "GROK_API_KEY": "sk-or-v1-xxx",
-    "GROK_MODEL": "x-ai/grok-4-fast:online"
+    "GROK_MODEL": "x-ai/grok-4-fast"
   }
 }'
 ```
 
-> **💡 提示**：`:online` 是 OpenRouter 特有的模型变体后缀，会自动启用 xAI 的原生 Web Search + X Search 能力。搜索结果附带真实来源引用。
+> **💡 提示**：当检测到 OpenRouter 平台时，系统会自动为模型名追加 `:online` 后缀（如 `x-ai/grok-4-fast` → `x-ai/grok-4-fast:online`），启用 xAI 的原生 Web Search + X Search 能力。搜索结果附带真实来源引用。
 
 #### 环境变量说明
 
@@ -185,7 +185,7 @@ claude mcp add-json grok-search --scope user '{
 |---------|------|--------|------|
 | `GROK_API_URL` | ✅ | - | API 端点 URL |
 | `GROK_API_KEY` | ✅ | - | API 密钥 |
-| `GROK_MODEL` | ❌ | `grok-4-fast` | 模型 ID（OpenRouter 用户建议加 `:online` 后缀） |
+| `GROK_MODEL` | ❌ | `grok-4-fast` | 模型 ID（OpenRouter 下自动补全 `:online` 后缀） |
 | `GROK_PROVIDER` | ❌ | 自动检测 | 手动指定平台类型：`xai` / `openrouter` / `generic` |
 | `GROK_DEBUG` | ❌ | `false` | 启用调试模式 |
 | `GROK_LOG_LEVEL` | ❌ | `INFO` | 日志级别 |
@@ -514,13 +514,13 @@ A: 注册第三方平台 → 获取 API Endpoint 和 Key → 使用 `claude mcp 
 A: 在 Claude 对话中说"显示 grok-search 配置信息"，查看连接测试结果
 
 **Q: 使用 OpenRouter 时搜索结果不准确？**
-A: 请确保 `GROK_MODEL` 设置了 `:online` 后缀（如 `x-ai/grok-4-fast:online`）。没有 `:online` 后缀时，模型没有实时搜索能力，结果基于训练数据生成。
+A: 系统会自动为 OpenRouter 模型添加 `:online` 后缀以启用实时搜索。如果仍有问题，请使用 `get_config_info` 工具检查实际使用的模型名是否包含 `:online`。
 
 **Q: 支持哪些 API 平台？**
-A: 支持所有 OpenAI 兼容格式的 API 平台。推荐使用 OpenRouter（支持原生搜索）或 xAI 官方 API。代码会根据 `GROK_API_URL` 自动检测平台类型。
+A: 支持所有 OpenAI 兼容格式的 API 平台。推荐使用 OpenRouter（自动启用原生搜索）或 xAI 官方 API。代码会根据 `GROK_API_URL` 自动检测平台类型。
 
 **Q: `:online` 后缀是什么？**
-A: 这是 OpenRouter 特有的模型变体后缀，会自动启用该模型的实时网络搜索能力。对于 xAI 模型，会同时启用 Web Search 和 X (Twitter) Search。
+A: 这是 OpenRouter 特有的模型变体后缀，会自动启用该模型的实时网络搜索能力。对于 xAI 模型，会同时启用 Web Search 和 X (Twitter) Search。使用 OpenRouter 时系统会自动补全此后缀，无需手动添加。
 
 ## 许可证
 

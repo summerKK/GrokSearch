@@ -108,19 +108,24 @@ class Config:
         # 优先级：环境变量 > 配置文件 > 默认值
         env_model = os.getenv("GROK_MODEL")
         if env_model:
-            return env_model
+            model = env_model
+        elif self._cached_model is not None:
+            model = self._cached_model
+        else:
+            config_data = self._load_config_file()
+            file_model = config_data.get("model")
+            if file_model:
+                self._cached_model = file_model
+                model = file_model
+            else:
+                self._cached_model = self._DEFAULT_MODEL
+                model = self._DEFAULT_MODEL
 
-        if self._cached_model is not None:
-            return self._cached_model
+        # OpenRouter 需要 :online 后缀才能启用联网搜索，自动补全
+        if self.provider_type == "openrouter" and ":online" not in model:
+            model = f"{model}:online"
 
-        config_data = self._load_config_file()
-        file_model = config_data.get("model")
-        if file_model:
-            self._cached_model = file_model
-            return file_model
-
-        self._cached_model = self._DEFAULT_MODEL
-        return self._DEFAULT_MODEL
+        return model
 
     def set_model(self, model: str) -> None:
         config_data = self._load_config_file()
@@ -148,10 +153,6 @@ class Config:
                 return "openrouter"
         return "generic"
 
-    @property
-    def is_online_model(self) -> bool:
-        return ":online" in self.grok_model
-
     @staticmethod
     def _mask_api_key(key: str) -> str:
         """脱敏显示 API Key，只显示前后各 4 个字符"""
@@ -176,7 +177,6 @@ class Config:
             "GROK_API_KEY": api_key_masked,
             "GROK_MODEL": self.grok_model,
             "GROK_PROVIDER": self.provider_type,
-            "GROK_ONLINE_SEARCH": self.is_online_model,
             "GROK_DEBUG": self.debug_enabled,
             "GROK_LOG_LEVEL": self.log_level,
             "GROK_LOG_DIR": str(self.log_dir),

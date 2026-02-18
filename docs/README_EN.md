@@ -50,7 +50,7 @@ Comparison with other search solutions:
 - ✅ **Tool routing control (one-click disable built-in WebSearch/WebFetch, force use GrokSearch)**
 - ✅ **Automatic time injection (automatically gets local time during search for accurate time-sensitive queries)**
 - ✅ **Multi-platform support (auto-detect xAI Official / OpenRouter / Generic OpenAI-compatible)**
-- ✅ **`GROK_MODEL` environment variable (configure `:online` suffix for OpenRouter native search)**
+- ✅ **OpenRouter auto-appends `:online` suffix, no manual configuration needed**
 - ✅ Extensible architecture for additional search providers
 
 ## Quick Start
@@ -105,20 +105,20 @@ claude mcp add-json grok-search --scope user '{
   "env": {
     "GROK_API_URL": "https://openrouter.ai/api/v1",
     "GROK_API_KEY": "your-api-key-here",
-    "GROK_MODEL": "x-ai/grok-4-fast:online"
+    "GROK_MODEL": "x-ai/grok-4-fast"
   }
 }'
 ```
 
 #### Configuration Guide
 
-Configuration is done through **environment variables**, set directly in the `env` field during installation:
+Configuration is done through **environment variables**, set directly in the `env` field during installation. OpenRouter users don't need to manually add the `:online` suffix - it's automatically appended:
 
 | Environment Variable | Required | Default | Description |
 |---------------------|----------|---------|-------------|
 | `GROK_API_URL` | ✅ | - | API endpoint URL |
 | `GROK_API_KEY` | ✅ | - | Your API Key |
-| `GROK_MODEL` | ❌ | `grok-4-fast` | Model ID (OpenRouter users should add `:online` suffix) |
+| `GROK_MODEL` | ❌ | `grok-4-fast` | Model ID (`:online` suffix auto-appended for OpenRouter) |
 | `GROK_PROVIDER` | ❌ | Auto-detect | Manually specify platform: `xai` / `openrouter` / `generic` |
 | `GROK_DEBUG` | ❌ | `false` | Enable debug mode (`true`/`false`) |
 | `GROK_LOG_LEVEL` | ❌ | `INFO` | Log level (DEBUG/INFO/WARNING/ERROR) |
@@ -184,13 +184,13 @@ Grok Search MCP supports multiple API platforms with automatic detection based o
 
 | Platform | URL Pattern | Search Capability | Example |
 |----------|------------|-------------------|---------|
-| **OpenRouter** | `openrouter.ai` | ✅ Native real-time search (requires `:online` suffix) | `GROK_MODEL=x-ai/grok-4-fast:online` |
+| **OpenRouter** | `openrouter.ai` | ✅ Native real-time search (`:online` auto-appended) | `GROK_MODEL=x-ai/grok-4-fast` |
 | **xAI Official** | `api.x.ai` | ✅ Native real-time search (planned) | `GROK_MODEL=grok-4-fast` |
 | **Generic** | Other URLs | ⚠️ Prompt-based search | `GROK_MODEL=grok-4-fast` |
 
 #### OpenRouter Users (Recommended)
 
-When using OpenRouter, add the `:online` suffix to the model name to enable **native real-time web search**:
+When using OpenRouter, the system **automatically appends the `:online` suffix** to the model name to enable native real-time web search - no manual configuration needed:
 
 ```bash
 claude mcp add-json grok-search --scope user '{
@@ -204,12 +204,12 @@ claude mcp add-json grok-search --scope user '{
   "env": {
     "GROK_API_URL": "https://openrouter.ai/api/v1",
     "GROK_API_KEY": "sk-or-v1-xxx",
-    "GROK_MODEL": "x-ai/grok-4-fast:online"
+    "GROK_MODEL": "x-ai/grok-4-fast"
   }
 }'
 ```
 
-> **💡 Tip**: `:online` is an OpenRouter-specific model variant suffix that automatically enables xAI's native Web Search + X Search capabilities. Search results include real source citations.
+> **💡 Tip**: When OpenRouter is detected, the system automatically appends `:online` to the model name (e.g., `x-ai/grok-4-fast` → `x-ai/grok-4-fast:online`), enabling xAI's native Web Search + X Search capabilities. Search results include real source citations.
 
 ###  4. Advanced Configuration (Optional)
 To better utilize Grok Search, you can optimize the overall Vibe Coding CLI by configuring Claude Code or similar system prompts. For Claude Code, edit ~/.claude/CLAUDE.md with the following content:
@@ -531,13 +531,13 @@ A: Register with a third-party platform → Obtain API Endpoint and Key → Conf
 A: Say "Show grok-search configuration info" in Claude conversation to check connection test results
 
 **Q: Search results are inaccurate when using OpenRouter?**
-A: Make sure `GROK_MODEL` has the `:online` suffix (e.g., `x-ai/grok-4-fast:online`). Without `:online`, the model has no real-time search capability and generates results from training data.
+A: The system automatically appends the `:online` suffix for OpenRouter models to enable real-time search. If issues persist, use the `get_config_info` tool to verify the actual model name includes `:online`.
 
 **Q: Which API platforms are supported?**
-A: All OpenAI-compatible API platforms are supported. OpenRouter (with native search) or xAI Official API are recommended. The platform type is auto-detected from `GROK_API_URL`.
+A: All OpenAI-compatible API platforms are supported. OpenRouter (with automatic native search) or xAI Official API are recommended. The platform type is auto-detected from `GROK_API_URL`.
 
 **Q: What is the `:online` suffix?**
-A: It's an OpenRouter-specific model variant suffix that enables real-time web search. For xAI models, it enables both Web Search and X (Twitter) Search.
+A: It's an OpenRouter-specific model variant suffix that enables real-time web search. For xAI models, it enables both Web Search and X (Twitter) Search. When using OpenRouter, this suffix is automatically appended - no manual configuration needed.
 
 ## License
 

@@ -15,8 +15,6 @@ from .base import BaseSearchProvider, SearchResult
 from ..utils import (
     search_prompt,
     fetch_prompt,
-    online_search_prompt,
-    online_fetch_prompt,
 )
 from ..logger import log_info
 from ..config import config
@@ -210,11 +208,6 @@ class GrokSearchProvider(BaseSearchProvider):
                 + " results."
             )
 
-        if config.is_online_model:
-            system_content = online_search_prompt
-        else:
-            system_content = search_prompt
-
         if _needs_time_context(query):
             time_context = get_local_time_info() + "\n"
         else:
@@ -225,7 +218,7 @@ class GrokSearchProvider(BaseSearchProvider):
             "messages": [
                 {
                     "role": "system",
-                    "content": system_content,
+                    "content": search_prompt,
                 },
                 {
                     "role": "user",
@@ -249,17 +242,12 @@ class GrokSearchProvider(BaseSearchProvider):
             "Content-Type": "application/json",
         }
 
-        if config.is_online_model:
-            system_content = online_fetch_prompt
-        else:
-            system_content = fetch_prompt
-
         payload = {
             "model": self.model,
             "messages": [
                 {
                     "role": "system",
-                    "content": system_content,
+                    "content": fetch_prompt,
                 },
                 {
                     "role": "user",
